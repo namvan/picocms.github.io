@@ -18,13 +18,22 @@ This is all Greek to you? Don't worry, you don't have to spend time on these tec
 
 ### Themes
 
-You can create themes for your Pico installation in the `themes` folder. Pico uses [Twig][] for template rendering. You can select your theme by setting the `theme` option in `config/config.yml` to the name of your theme folder.
+[Pico's default theme][PicoTheme] isn't really intended for a productive website, it's rather a starting point for creating your own theme. If you find the default theme isn't sufficient for you but you can't or don't want to create your own theme, you can use one of the great themes third-party developers and designers created in the past. Check out our [themes][OfficialThemes] page for more details.
 
-[Pico's default theme][PicoTheme] isn't really intended to be used for a productive website, it's rather a starting point for creating your own theme. If the default theme isn't sufficient for you, and you don't want to create your own theme, you can use one of the great themes third-party developers and designers created in the past. As with plugins, you can find themes on our [themes][OfficialThemes] page.
+However, if you opt to create your own theme, it is possible too. Pico uses [Twig][] for template rendering and this allows you to create themes for your Pico installation. The process is genenally as below:
+* Create a folder in the `themes` folder.
+* Add your twig template files, css files and js files as required.
+* Select your theme by specifying the theme folder name in `theme` option in `config/config.yml`.
 
-All themes must include an `index.twig` file to define the HTML structure of the theme, and a `pico-theme.yml` to set the necessary config parameters. Just refer to Pico's default theme as an example. You can use different templates for different content files by specifying the `Template` meta header. Simply add e.g. `Template: blog` to the YAML header of a content file and Pico will use the `blog.twig` template in your theme folder to display the page.
+All themes must include:
+* an `index.twig` file to define the HTML structure of the theme
+* and a `pico-theme.yml` to set the necessary config parameters.
 
-Below are the Twig variables that are available to use in themes. Please note that URLs (e.g. `{% raw %}{{ base_url }}{% endraw %}`) never include a trailing slash.
+Just refer to Pico's default theme as an example.
+
+You can use different templates, that is different twig file for different content files by specifying the `Template` meta header. As an example, adding e.g. `Template: blog` to the YAML header of a content file will instructs Pico to use the `blog.twig` template in your theme folder to render the page.
+
+Below are the Twig variables that are available when defining a theme. Please note that URLs (e.g. `{% raw %}{{ base_url }}{% endraw %}`) never include a trailing slash.
 
 * `{% raw %}{{ site_title }}{% endraw %}` - Shortcut to the site title (see `config/config.yml`)
 * `{% raw %}{{ config }}{% endraw %}` - Contains the values you set in `config/config.yml` (e.g. `{% raw %}{{ config.theme }}{% endraw %}` becomes `default`)
@@ -50,11 +59,11 @@ Below are the Twig variables that are available to use in themes. Please note th
 
 To call assets from your theme, use `{% raw %}{{ theme_url }}{% endraw %}`. For instance, to include the CSS file `themes/my_theme/example.css`, add `{% raw %}<link rel="stylesheet" href="{{ theme_url }}/example.css" type="text/css" />{% endraw %}` to your `index.twig`. This works for arbitrary files in your theme's folder, including images and JavaScript files.
 
-Please note that Twig escapes HTML in all strings before outputting them. So for example, if you add `headline: My <strong>favorite</strong> color` to the YAML header of a page and output it using `{% raw %}{{ meta.headline }}{% endraw %}`, you'll end up seeing `My <strong>favorite</strong> color` - yes, including the markup! To actually get it parsed, you must use `{% raw %}{{ meta.headline|raw }}{% endraw %}` (resulting in the expected <code>My <strong>favorite</strong> color</code>). Notable exceptions to this are Pico's `content` variable (e.g. `{% raw %}{{ content }}{% endraw %}`), Pico's `content` filter (e.g. `{% raw %}{{ "sub/page"|content }}{% endraw %}`), and Pico's `markdown` filter, they all are marked as HTML safe.
+Please note that Twig **escapes HTML** in all strings before outputting them. So for example, if you add `headline: My <strong>favorite</strong> color` to the YAML header of a page and output it using `{% raw %}{{ meta.headline }}{% endraw %}`, you'll end up seeing `My <strong>favorite</strong> color` - yes, including the markup! To actually **get it parsed**, you must use `{% raw %}{{ meta.headline|raw }}{% endraw %}` (resulting in the expected <code>My <strong>favorite</strong> color</code>). Notable exceptions to this are Pico's `content` variable (e.g. `{% raw %}{{ content }}{% endraw %}`), Pico's `content` filter (e.g. `{% raw %}{{ "sub/page"|content }}{% endraw %}`), and Pico's `markdown` filter, they all are marked as HTML safe.
 
 #### Dealing with pages
 
-There are several ways to access Pico's pages list. You can access the current page's data using the `current_page` variable, or use the `prev_page` and/or `next_page` variables to access the respective previous/next page in Pico's pages list. But more importantly there's the `pages()` function. No matter how you access a page, it will always consist of the following data:
+Pico makes the list of pages available and there are several ways to access it. The variable `current_page` points to the current displayed page while the variable `prev_page` and `next_page` respectively point to previous and next page. A page consists of the following data:
 
 * `{% raw %}{{ id }}{% endraw %}` - The relative path to the content file (unique ID)
 * `{% raw %}{{ url }}{% endraw %}` - The URL to the page
@@ -70,7 +79,10 @@ There are several ways to access Pico's pages list. You can access the current p
 * `{% raw %}{{ next_page }}{% endraw %}` - The data of the respective next page
 * `{% raw %}{{ tree_node }}{% endraw %}` - The page's node in Pico's page tree; check out Pico's [page tree documentation][FeaturesPageTree] for details
 
-Pico's `pages()` function is the best way to access all of your site's pages. It uses Pico's page tree to easily traverse a subset of Pico's pages list. It allows you to filter pages and to build recursive menus (like dropdowns). By default, `pages()` returns a list of all main pages (e.g. `content/page.md` and `content/sub/index.md`, but not `content/sub/page.md` or `content/index.md`). If you want to return all pages below a specific folder (e.g. `content/blog/`), pass the folder name as first parameter to the function (e.g. `pages("blog")`). Naturally you can also pass variables to the function. For example, to return a list of all child pages of the current page, use `pages(current_page.id)`. Check out the following code snippet:
+An important concept is the `pages()` function. Pico's `pages()` function is the best way to access all of your site's pages. It uses Pico's page tree to easily traverse a subset of Pico's pages list. It allows you to filter pages and to build recursive menus (like dropdowns). There are a few notes
+* By default, `pages()` returns a list of all main pages (e.g. pages under content folder such as `content/page.md` or first level sub-folders of `content` with associated index.md such as `content/sub/index.md`, but not `content/sub/page.md` or `content/index.md`).
+* If you want to return all pages below a specific folder (e.g. `content/blog/`), pass the folder name as first parameter to the function (e.g. `pages("blog")`).
+* Naturally you can also pass variables to the function. For example, to return a list of all child pages of the current page, use `pages(current_page.id)`. Check out the following code snippet:
 
 {% raw %}<pre><code>&lt;section class=&quot;articles&quot;&gt;
     {% for page in pages(current_page.id) if not page.hidden %}
@@ -81,9 +93,9 @@ Pico's `pages()` function is the best way to access all of your site's pages. It
     {% endfor %}
 &lt;/section&gt;</code></pre>{% endraw %}
 
-The `pages()` function is very powerful and also allows you to return not just a page's child pages by passing the `depth` and `depthOffset` params. For example, if you pass `pages(depthOffset=-1)`, the list will also include Pico's main index page (i.e. `content/index.md`). This one is commonly used to create a theme's main navigation. If you want to learn more, head over to Pico's complete [`pages()` function documentation][FeaturesPagesFunction].
+The `pages()` function also returns more data than just child pages of a page by passing the `depth` and `depthOffset` params to it. For example, if you pass `pages(depthOffset=-1)`, the list will also include Pico's main index page (i.e. `content/index.md`). This one is commonly used to create a theme's main navigation. If you want to learn more, head over to Pico's complete [`pages()` function documentation][FeaturesPagesFunction].
 
-If you want to access the data of a particular page, use Pico's `pages` variable. Just take `content/_meta.md` in Pico's sample contents for an example: `content/_meta.md` contains some meta data you might want to use in your theme. If you want to output the page's `tagline` meta value, use `{% raw %}{{ pages["_meta"].meta.logo }}{% endraw %}`. Don't ever try to use Pico's `pages` variable as an replacement for Pico's `pages()` function. Its usage looks very similar, it will kinda work and you might even see it being used in old themes, but be warned: It slows down Pico. Always use Pico's `pages()` function when iterating Pico's page list instead (e.g. `{% raw %}{% for page in pages() %}…{% endfor %}{% endraw %}`).
+If you want to access the data of a particular page, use Pico's `pages` variable. Just take `content/_meta.md` in Pico's sample contents for an example: `content/_meta.md` contains some meta data you might want to use in your theme. If you want to output the page's `tagline` meta value, use `{% raw %}{{ pages["_meta"].meta.logo }}{% endraw %}`. However, don't ever try to use Pico's `pages` variable as an replacement for Pico's `pages()` function. Its usage looks very similar, it will kinda work and you might even see it being used in old themes, but be warned: It slows down Pico. Always use Pico's `pages()` function when iterating Pico's page list instead (e.g. `{% raw %}{% for page in pages() %}…{% endfor %}{% endraw %}`).
 
 #### Twig filters and functions
 
